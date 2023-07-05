@@ -1,30 +1,39 @@
-from django.contrib.auth.models import AbstractBaseUser, BaseUserManager
 from django.db import models
 
+from django.db import models
+from django.contrib.auth.models import AbstractBaseUser, BaseUserManager, PermissionsMixin
+
+# 헬퍼 클래스
 class UserManager(BaseUserManager):
-    def create_user(self, email, username, password=None):
+    def create_user(self, email, password, **kwargs):
         if not email:
-            raise ValueError("The Email field must be set")
+            raise ValueError("Users must have an email address")
 
-        email = self.normalize_email(email)
-        user = self.model(email=email, username=username)
+        user = self.model(email = email)
         user.set_password(password)
-        user.save(using=self._db)
+        user.save(using = self._db)
         return user
-
-    def create_superuser(self, email, password=None, **extra_fields):
-        extra_fields.setdefault('is_staff', True)
-        extra_fields.setdefault('is_superuser', True)
-        extra_fields['username'] = extra_fields.get('username') or email
-        return self.create_user(email, password, **extra_fields)
-
-class User(AbstractBaseUser):
-    email = models.EmailField(unique=True)
-    username = models.CharField(max_length=150, unique=True)
+    
+    def create_superuser(self, email = None, password = None, **extra_fields):
+        superuser = self.create_user(email=email, password=password)
+        
+        superuser.is_staff = True
+        superuser.is_superuser = True
+        superuser.is_active = True
+        
+        superuser.save(using = self._db)
+        return superuser
+    
+class User(AbstractBaseUser, PermissionsMixin):
+    email = models.EmailField(max_length=30, unique=True, null=False, blank=False)
+    is_superuser = models.BooleanField(default=False)
     is_active = models.BooleanField(default=True)
     is_staff = models.BooleanField(default=False)
-
+    created_at = models.DateTimeField(auto_now_add=True)
+    updated_at = models.DateTimeField(auto_now=True)
+    
+    # 헬퍼 클래스 사용
     objects = UserManager()
 
+	# 사용자의 username field는 email으로 설정 (이메일로 로그인)
     USERNAME_FIELD = 'email'
-    REQUIRED_FIELDS = ['username']
