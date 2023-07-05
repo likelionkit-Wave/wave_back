@@ -22,12 +22,38 @@ from django.shortcuts import render, get_object_or_404
 from rest_framework import viewsets
 from rest_framework.permissions import IsAuthenticated
 
+from .serializers import UserInfoSerializer
+from rest_framework.decorators import api_view, permission_classes, authentication_classes
+from django.contrib.auth.models import User
+from rest_framework.authtoken.models import Token
+from rest_framework.authentication import TokenAuthentication
+from django.contrib.auth import get_user_model
+from rest_framework.exceptions import NotFound
+from rest_framework.permissions import AllowAny
 
 SECRET_KEY = os.environ.get("SECRET_KEY")
 # 구글 소셜로그인 변수 설정
 state = os.environ.get("STATE")
 BASE_URL = 'http://localhost:8000/'
 GOOGLE_CALLBACK_URI = BASE_URL + 'api/accounts/google/callback/'
+
+#User = get_user_model()
+
+@api_view(['GET'])
+#@permission_classes([IsAuthenticated])
+def get_user_email(request):
+
+    try:
+        token = request.auth
+        print(request)
+        print(token)
+        token_user = Token.objects.get(key=token).user
+        user = User.objects.get(id=token_user.id)
+        user_data = UserInfoSerializer(user).data
+        return Response(user_data)
+    except Token.DoesNotExist:
+        raise NotFound(detail="Token does not exist.", code=404)
+    
 
 def google_login(request):
     scope = "https://www.googleapis.com/auth/userinfo.email"
@@ -68,6 +94,7 @@ def google_callback(request):
     ### 2-2. 성공 시 이메일 가져오기
     email_req_json = email_req.json()
     email = email_req_json.get('email')
+    user_id = email_req_json.get('user_id') 
 
     # return JsonResponse({'access': access_token, 'email':email})
 
@@ -96,7 +123,8 @@ def google_callback(request):
 
         accept_json = accept.json()
         accept_json.pop('user', None)
-        return JsonResponse(accept_json)
+        # JsonResponse에 email과 user_id 값을 추가하여 반환
+        return JsonResponse({'access': access_token, 'email': email, 'user_id': user_id})
 
     except User.DoesNotExist:
         # 전달받은 이메일로 기존에 가입된 유저가 아예 없으면 => 새로 회원가입 & 해당 유저의 jwt 발급
@@ -233,3 +261,4 @@ class UserViewSet(viewsets.ModelViewSet):
     permission_classes = [IsAuthenticated]
     queryset = User.objects.all()
     serializer_class = UserSerializer
+    

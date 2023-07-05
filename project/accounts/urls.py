@@ -1,6 +1,6 @@
 from django.urls import path, include
 
-from accounts.views import google_callback, google_login, GoogleLogin, RegisterAPIView, AuthAPIView
+from accounts.views import google_callback, google_login, GoogleLogin, RegisterAPIView, AuthAPIView,get_user_email
 from rest_framework_simplejwt.views import TokenRefreshView
 from rest_framework import routers
 from .views import *
@@ -17,4 +17,5 @@ urlpatterns = [
     path("auth/", AuthAPIView.as_view()),
     path("auth/refresh/", TokenRefreshView.as_view()),
     path("", include(router.urls)),
+    path('user_email/', get_user_email, name='user_email'),
 ]
