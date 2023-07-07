@@ -31,6 +31,7 @@ class User(AbstractBaseUser, PermissionsMixin):
     is_staff = models.BooleanField(default=False)
     created_at = models.DateTimeField(auto_now_add=True)
     updated_at = models.DateTimeField(auto_now=True)
+    nickname = models.CharField(max_length=50, null = True, blank=False)
     
     # 헬퍼 클래스 사용
     objects = UserManager()

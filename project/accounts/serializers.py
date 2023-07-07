@@ -12,3 +12,13 @@ class UserSerializer(serializers.ModelSerializer):
             password = validated_data['password']
         )
         return user
+    
+class UserInfoSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = User
+        fields = ('id','email')
+
+class UserNicknameSerializer(serializers.ModelSerializer):
+    class Meta :
+        model = User
+        fields = ('id', 'nickname')
