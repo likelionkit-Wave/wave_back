@@ -119,6 +119,9 @@ def google_callback(request):
     try:
         # 전달받은 이메일로 등록된 유저가 있는지 탐색
         user = User.objects.get(email=email)
+        email = user.email
+        nickname = user.nickname
+        db_user_id = user.id
 
         # FK로 연결되어 있는 socialaccount 테이블에서 해당 이메일의 유저가 있는지 확인
         social_user = SocialAccount.objects.get(user=user)
@@ -138,7 +141,10 @@ def google_callback(request):
 
         accept_json = accept.json()
         accept_json.pop('user', None)
-        return JsonResponse(accept_json)
+        key = accept_json["key"]
+
+        # JsonResponse에 email과 user_id 값을 추가하여 반환
+        return JsonResponse({'key': key, 'email': email, 'user_id': db_user_id, "user_nickname" : nickname})
 
     except User.DoesNotExist:
         # 전달받은 이메일로 기존에 가입된 유저가 아예 없으면 => 새로 회원가입 & 해당 유저의 jwt 발급
