@@ -24,35 +24,28 @@ from rest_framework.permissions import IsAuthenticated
 
 from .serializers import UserInfoSerializer
 from rest_framework.decorators import api_view, permission_classes, authentication_classes
-from django.contrib.auth.models import User
+from accounts.models import User
 from rest_framework.authtoken.models import Token
 from rest_framework.authentication import TokenAuthentication
-from django.contrib.auth import get_user_model
 from rest_framework.exceptions import NotFound
 from rest_framework.permissions import AllowAny
-
+from rest_framework_simplejwt.authentication import JWTAuthentication
 SECRET_KEY = os.environ.get("SECRET_KEY")
 # 구글 소셜로그인 변수 설정
 state = os.environ.get("STATE")
 BASE_URL = 'http://localhost:8000/'
 GOOGLE_CALLBACK_URI = BASE_URL + 'api/accounts/google/callback/'
 
-#User = get_user_model()
-
-@api_view(['GET'])
-#@permission_classes([IsAuthenticated])
-def get_user_email(request):
+def get_user_email(key):
 
     try:
-        token = request.auth
-        print(request)
-        print(token)
-        token_user = Token.objects.get(key=token).user
-        user = User.objects.get(id=token_user.id)
-        user_data = UserInfoSerializer(user).data
-        return Response(user_data)
-    except Token.DoesNotExist:
-        raise NotFound(detail="Token does not exist.", code=404)
+        token_user = Token.objects.get(key=key)
+        user = User.objects.get(id=token_user.user_id)
+        user_data = UserInfoSerializer(user)
+        print(user_data)
+        return user_data
+    except :
+        print("error")
     
 
 def google_login(request):
@@ -256,9 +249,5 @@ class AuthAPIView(APIView):
         response.delete_cookie("access")
         response.delete_cookie("refresh")
         return response
-    
-class UserViewSet(viewsets.ModelViewSet):
-    permission_classes = [IsAuthenticated]
-    queryset = User.objects.all()
-    serializer_class = UserSerializer
+
     
