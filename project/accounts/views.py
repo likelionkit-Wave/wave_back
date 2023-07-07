@@ -75,7 +75,9 @@ def update_nickname(request):
             
             user.nickname = data_json["nickname"]  # 닉네임을 업데이트합니다.
             user.save()  # 변경 사항을 저장합니다.
-            return JsonResponse({'message': 'Nickname updated successfully.'})
+            
+            response_json = {'email' : user.email, 'key' : key, 'nickname' : user.nickname, 'user_id' : user.id}
+            return JsonResponse(response_json)
         except User.DoesNotExist:
             return JsonResponse({'message': 'User not found.'}, status=404)
     else:

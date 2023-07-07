@@ -12,6 +12,7 @@ from rest_framework import status
 #편지쓰기
 @api_view(['POST'])
 def create_letter(request):
+
     #사용자 계정, 제목, 내용, 작성자, 날짜
     user_email = request.data.get('user_email')
     title = request.data.get('title')
@@ -20,13 +21,14 @@ def create_letter(request):
 
     try:
         user = User.objects.get(email=user_email)
+
     except User.DoesNotExist:
         return Response({'error': 'User not found'}, status=status.HTTP_400_BAD_REQUEST)
 
-    data = {'user': user.id, 'content': content, 'title':title, 'writer':writer}
+    data = {'user': user.id, 'content': content, 'title': title, 'writer': writer}
     serializer = LetterSerializer(data=data)
 
-    if serializer.is_valid():
+    if serializer.is_valid(raise_exception=True):
         serializer.save()
         return Response(serializer.data, status=status.HTTP_200_OK)
     return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
@@ -54,6 +56,6 @@ def delete_letter(request, letter_id):
     try:
         letter = Letter.objects.get(pk=letter_id)
         letter.delete()
-        return Response(status=204)
+        return Response(status=status.HTTP_200_OK)
     except Letter.DoesNotExist:
         return Response({'error': 'Letter not found'}, status=status.HTTP_400_BAD_REQUEST)
