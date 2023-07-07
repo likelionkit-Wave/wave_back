@@ -22,6 +22,12 @@ from django.shortcuts import render, get_object_or_404
 from rest_framework import viewsets
 from rest_framework.permissions import IsAuthenticated
 
+from rest_framework.authtoken.models import Token
+from django.views.decorators.csrf import csrf_exempt
+
+import json
+
+
 
 SECRET_KEY = os.environ.get("SECRET_KEY")
 # 구글 소셜로그인 변수 설정
@@ -30,10 +36,47 @@ BASE_URL = 'http://localhost:8000/'
 # GOOGLE_CALLBACK_URI = BASE_URL + 'api/accounts/google/callback/'
 GOOGLE_CALLBACK_URI = 'http://localhost:3000'
 
+
+def get_user_email(key):
+    
+    try:
+        token_user = Token.objects.get(key=key)
+        user = User.objects.get(id=token_user.user_id)
+        user_data = UserInfoSerializer(user)
+        print(user_data)
+        return user
+    except :
+        print("error")
+        
 def google_login(request):
     scope = "https://www.googleapis.com/auth/userinfo.email"
     client_id = os.environ.get("SOCIAL_AUTH_GOOGLE_CLIENT_ID")
     return redirect(f"https://accounts.google.com/o/oauth2/v2/auth?client_id={client_id}&response_type=code&redirect_uri={GOOGLE_CALLBACK_URI}&scope={scope}")
+
+@csrf_exempt
+def update_nickname(request):
+    if request.method == 'PUT':
+        key = request.META.get('HTTP_KEY')  # 헤더에서 key 값을 가져옵니다.
+        reqesut_data = request.body.decode('utf-8')  # 닉네임 값을 요청의 본문에서 가져옵니다.
+        data_json = json.loads(request.body)
+        
+        try:
+            user = get_user_email(key=key)  # key에 해당하는 사용자를 찾습니다.
+            print("==================================")
+            print(type(data_json))
+            print(data_json)
+            print(data_json["nickname"])
+            print("==================================")
+            
+            user.nickname = data_json["nickname"]  # 닉네임을 업데이트합니다.
+            user.save()  # 변경 사항을 저장합니다.
+            
+            response_json = {'email' : user.email, 'key' : key, 'nickname' : user.nickname, 'user_id' : user.id}
+            return JsonResponse(response_json)
+        except User.DoesNotExist:
+            return JsonResponse({'message': 'User not found.'}, status=404)
+    else:
+        return JsonResponse({'message': 'Invalid request method.'}, status=400)
 
 def google_callback(request):
     client_id = os.environ.get("SOCIAL_AUTH_GOOGLE_CLIENT_ID")
