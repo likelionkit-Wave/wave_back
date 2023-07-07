@@ -105,7 +105,7 @@ def google_callback(request):
         response_json["id"] = user.id
         response_json["email"] = email
         response_json["nickname"] = nickname
-        response_json["token"] = accept_json["key"]
+        response_json["key"] = accept_json["key"]
 
         return JsonResponse(response_json)
 
