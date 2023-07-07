@@ -4,6 +4,10 @@ from .serializers import LetterSerializer
 from accounts.models import User
 from .models import Letter
 from rest_framework.views import APIView
+from rest_framework import viewsets
+from rest_framework import generics
+from django.shortcuts import get_list_or_404
+
 
 @api_view(['POST'])
 def create_letter(request):
@@ -25,13 +29,17 @@ def create_letter(request):
 
 class LetterAPIView(APIView):
     model = Letter
-    def get(self, request):
-        letters = Letter.objects.all()
-        serializer = LetterSerializer(letters, many=True)
+    serializer_class = LetterSerializer
+
+    def get(self, request, user_id):
+        letters = get_list_or_404(Letter, user_id=user_id)
+        serializer = self.serializer_class(letters, many=True)
         return Response(serializer.data)
 
-    def post(self, request):
-        serializer = LetterSerializer(data=request.data)
+    def post(self, request, user_id):
+        data = request.data
+        data["user_id"] = user_id  # 추가: user_id를 주어진 user_id 값으로 지정합니다.
+        serializer = self.serializer_class(data=data)
         if serializer.is_valid():
             serializer.save()
             return Response(serializer.data, status=status.HTTP_201_CREATED)
