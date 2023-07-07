@@ -25,6 +25,5 @@ urlpatterns = [
     path('api/accounts/', include('allauth.urls')),
     path('api/accounts/', include('accounts.urls')),
     path('api/message/', include('message.urls')),
-    path('api/Letter_list/', LetterAPIView.as_view(), name = 'Letter_list'),
     path('api/letters/<int:user_id>/', LetterAPIView.as_view(), name='letters_by_user_id'),
 ]
