@@ -41,6 +41,13 @@ def detail_letter(request, letter_id):
     serializer = LetterSerializer(letter)
     return Response(serializer.data)
 
+@api_view(['GET'])
+def read_letters_by_user(request, user_id):
+    letters = Letter.objects.filter(user_id=user_id)  # user_id에 해당하는 Letter들을 필터링
+
+    serializer = LetterSerializer(letters, many=True)  # Letter 리스트를 직렬화
+    return Response(serializer.data)
+
 #편지삭제
 @api_view(['DELETE'])
 def delete_letter(request, letter_id):
