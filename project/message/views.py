@@ -2,7 +2,9 @@ from rest_framework.decorators import api_view
 from rest_framework.response import Response
 from .serializers import LetterSerializer
 from accounts.models import User
+from .models import Letter
 
+#편지쓰기
 @api_view(['POST'])
 def create_letter(request):
     user_email = request.data.get('user_email')
@@ -20,3 +22,24 @@ def create_letter(request):
         serializer.save()
         return Response(serializer.data, status=201)
     return Response(serializer.errors, status=400)
+
+#편지보기
+@api_view(['GET'])
+def detail_letter(request, letter_id):
+    letter = Letter.objects.get(pk=letter_id)
+    letter.is_read = True  # is_read 필드 값을 True로 설정
+    letter.save()  # 변경된 값을 데이터베이스에 저장
+
+    serializer = LetterSerializer(letter)
+    return Response(serializer.data)
+
+#편지삭제
+@api_view(['DELETE'])
+def delete_letter(request, letter_id):
+    try:
+        letter = Letter.objects.get(pk=letter_id)
+    except Letter.DoesNotExist:
+        return Response({'error': 'Letter not found'}, status=404)
+
+    letter.delete()
+    return Response(status=204)
